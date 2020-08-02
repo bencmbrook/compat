@@ -42,6 +42,13 @@ const argv =
       'config': './.compatrc.json'
     })
     .config()
+    //   'config': './compat.config.js'
+    // })
+    // .config('settings', function (configPath) {
+    //   console.log('asdfkljasldfkjaklsdfjlasdjfklasjflasdjf\n\n\n')
+    //   console.log('hello', configPath);
+    //   return require(configPath);
+    // })
     .version()
     .help(false)
     .argv
@@ -109,6 +116,7 @@ function runCompat (compatTableLocation) {
 
   const errors = compat.check(filesToCheck, argv.jsEnvs, argv.htmlEnvs, argv.features, argv.ignoreFeatures, compatTableLocation)
   output.outputErrors(errors)
+  output.outputCoverage(argv.jsEnvs, argv.htmlEnvs, errors)
 }
 
 function getFilesInDirectory (path, recursive) {

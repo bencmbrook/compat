@@ -1,5 +1,6 @@
 let fs = require('fs')
 let colors = require('colors')
+let browserslist = require('browserslist')
 
 module.exports.outputErrors = (errors) => {
   const numErrors = Object.getOwnPropertyNames(errors).length
@@ -44,6 +45,58 @@ module.exports.outputErrors = (errors) => {
       })
     })
   }
+}
+
+module.exports.outputCoverage = (jsEnvs, htmlEnvs, errors) => {
+  let incompatibleEnvs = [];
+  Object.entries(errors).forEach(([fileName, errorsForFile]) => {
+    Object.entries(errorsForFile).forEach(([featureName, errorDetails]) => {
+      if (errorDetails.incompatEnvs) {
+        incompatibleEnvs = [...incompatibleEnvs, ...errorDetails.incompatEnvs];
+      }
+    })
+  })
+  const incompatible = new Set(incompatibleEnvs)
+  const tested = new Set([...jsEnvs, ...htmlEnvs])
+  const differencer = (set1, set2) => new Set([...set1].filter(x => !set2.has(x)))
+  const compatible = differencer(tested, incompatible);
+
+  const getBrowserAndVersion = (env) => {
+    const [browser, version] = env.split(/(\d+)/);
+    return {
+      browser,
+      version: Number(version),
+    };
+  };
+
+  const coverage = (() => {
+    const maximumIncompatible = {};
+    incompatible.forEach((env) => {
+      const { browser, version } = getBrowserAndVersion(env);
+      if (!maximumIncompatible[browser] || maximumIncompatible[browser] < version) {
+        maximumIncompatible[browser] = version;
+      }
+    });
+
+    let browserslistInput = 'defaults';
+    Object.entries(maximumIncompatible).forEach(([browser, version]) => {
+      browserslistInput = `${browserslistInput}, not ${browser} <= ${version}`;
+    });
+
+    return browserslist.coverage(browserslist(browserslistInput));
+  })();
+
+  // Get minimum requirements
+  const minimumRequirements = {};
+  compatible.forEach((env) => {
+    const { browser, version } = getBrowserAndVersion(env);
+    if (!minimumRequirements[browser] || minimumRequirements[browser] > version) {
+      minimumRequirements[browser] = version;
+    }
+  });
+
+  console.log('Minimum Requirements:', minimumRequirements)
+  console.log('Coverage:', coverage);
 }
 
 module.exports.outputSupportedFeatures = (allFeatures) => {

@@ -69,8 +69,8 @@ compat --jsEnvs ie11 chrome54 --htmlEnvs ie11
 ```
 
 All of the above flags can be specified in a config file. By default, compat will try to read
-`./.compatrc.json`, but another config file can be specified with the `--config` (`-c`) flag.
-The config file must end with `.json`.
+`./.compat.config.js`, but another config file can be specified with the `--config` (`-c`) flag.
+The config file must end with `.js`.
 
 ```
 compat --config ./configs/compat-config.json
